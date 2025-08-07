@@ -1,36 +1,32 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:babyshophub/config/firebase_options.dart';
+import 'package:provider/provider.dart';
+import 'app.dart';
+import 'config/firebase_options.dart';
+import 'providers/auth_provider.dart';
+import 'providers/product_provider.dart';
+import 'providers/cart_provider.dart';
+import 'providers/user_provider.dart'; // Make sure this import exists
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    runApp(const MyApp());
-  } catch (e) {
-    print('🔥 Firebase Init Error: $e');
-  }
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'BabyShopHub',
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.blueGrey[50],
-        body: Center(
-          child: Text(
-            'Hello BabyShopHub 👶🛍️',
-            style: TextStyle(fontSize: 24, color: Colors.black),
-          ),
-        ),
-      ),
-    );
-  }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()), // Add this line
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        // Add any other providers your app needs here
+        // For example:
+        // ChangeNotifierProvider(create: (_) => WishlistProvider()),
+        // ChangeNotifierProvider(create: (_) => OrderProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
