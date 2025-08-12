@@ -1,4 +1,3 @@
-// providers/product_provider.dart
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
 import '../services/product_service.dart';
@@ -173,16 +172,6 @@ class ProductProvider with ChangeNotifier {
     return ProductService.getProductsByCategory(category);
   }
 
-  // Get personalized products for user interests
-  List<ProductModel> getPersonalizedProductsForCategory(String category) {
-    if (!_userInterests.contains(category)) return [];
-
-    return _products
-        .where((product) => product.category == category)
-        .toList()
-      ..sort((a, b) => b.rating.compareTo(a.rating));
-  }
-
   // Refresh products
   void refreshProducts() {
     _loadProducts();
@@ -208,7 +197,6 @@ class ProductProvider with ChangeNotifier {
   void sortProducts(String sortBy) {
     switch (sortBy) {
       case 'personalized':
-      // Keep personalized order (interests first)
         _filteredProducts = _personalizedProducts.where((product) {
           final matchesSearch = _searchQuery.isEmpty ||
               product.name.toLowerCase().contains(_searchQuery) ||
@@ -229,8 +217,6 @@ class ProductProvider with ChangeNotifier {
         break;
       case 'rating':
         _filteredProducts.sort((a, b) => b.rating.compareTo(a.rating));
-        break;
-      default:
         break;
     }
     notifyListeners();

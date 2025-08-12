@@ -1,3 +1,4 @@
+// ======================= Updated onboarding_screen.dart =======================
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
@@ -12,6 +13,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _isLoading = false;
 
   final List<OnboardingData> _onboardingData = [
     OnboardingData(
@@ -58,18 +60,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _completeOnboarding() async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (_isLoading) return;
 
-    // Mark that user has seen onboarding
-    await userProvider.markOnboardingSeen();
+    setState(() {
+      _isLoading = true;
+    });
 
-    if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/category-selection');
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+      // Check if user exists and has valid data
+      if (userProvider.currentUser == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('User data not found. Please try logging in again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Mark onboarding as completed - this will trigger navigation in WrapperScreen
+      await userProvider.markOnboardingCompleted();
+
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error completing onboarding: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-  }
-
-  void _skipOnboarding() {
-    _completeOnboarding();
   }
 
   @override
@@ -86,11 +117,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: _skipOnboarding,
+                    onPressed: _isLoading ? null : _completeOnboarding,
                     child: Text(
                       'Skip',
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: _isLoading ? Colors.grey[400] : Colors.grey[600],
                         fontSize: 16,
                       ),
                     ),
@@ -116,7 +147,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
+                        // Icon container with animation
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
@@ -130,24 +163,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ),
                         const SizedBox(height: 48),
-                        Text(
-                          data.title,
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                        // Title with fade animation
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 500),
+                          opacity: 1.0,
+                          child: Text(
+                            data.title,
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 24),
-                        Text(
-                          data.description,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                            height: 1.5,
+                        // Description with fade animation
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 500),
+                          opacity: 1.0,
+                          child: Text(
+                            data.description,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                              height: 1.5,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -161,6 +204,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.all(32.0),
               child: Column(
                 children: [
+                  // Page indicators
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -180,11 +224,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   const SizedBox(height: 32),
+                  // Action button
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _nextPage,
+                      onPressed: _isLoading ? null : _nextPage,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
@@ -192,8 +237,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           borderRadius: BorderRadius.circular(28),
                         ),
                         elevation: 0,
+                        disabledBackgroundColor: Colors.grey[300],
                       ),
-                      child: Text(
+                      child: _isLoading
+                          ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          strokeWidth: 2,
+                        ),
+                      )
+                          : Text(
                         _currentPage == _onboardingData.length - 1
                             ? 'Choose Your Interests'
                             : 'Next',
