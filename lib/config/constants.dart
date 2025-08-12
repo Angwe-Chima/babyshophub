@@ -2,17 +2,27 @@
 import 'package:flutter/material.dart';
 
 class AppConstants {
-  // Colors
-  static const Color primaryColor = Color(0xFF6C63FF);
-  static const Color secondaryColor = Color(0xFF00D4AA);
-  static const Color backgroundColor = Color(0xFFF8F9FA);
-  static const Color backgroundSecondary = Color(0xFFF1F2F6); // Added missing color
+  // 10-30-60 Color Rule Implementation
+  // 60% - Neutral/Background colors (FFF9F4)
+  static const Color neutralColor = Color(0xFFFFF9F4); // Main background
+  static const Color backgroundColor = Color(0xFFFFF9F4);
   static const Color cardColor = Colors.white;
+
+  // 30% - Secondary colors (CCA291)
+  static const Color primaryColor = Color(0xFFCCA291); // Brown/tan color
+  static const Color secondaryColor = Color(0xFFCCA291);
+
+  // 10% - Accent colors (F4C2C2)
+  static const Color accentColor = Color(0xFFF4C2C2); // Pink accent
+  static const Color highlightColor = Color(0xFFF4C2C2);
+
+  // Supporting colors
   static const Color textPrimary = Color(0xFF2D3436);
   static const Color textSecondary = Color(0xFF636E72);
   static const Color errorColor = Color(0xFFE17055);
   static const Color successColor = Color(0xFF00B894);
-  static const Color borderColor = Color(0xFFE2E8F0); // Added missing color
+  static const Color borderColor = Color(0xFFE2E8F0);
+  static const Color backgroundSecondary = Color(0xFFF1F2F6);
 
   // Spacing
   static const double paddingSmall = 8.0;
@@ -61,7 +71,7 @@ class AppConstants {
     color: textSecondary,
   );
 
-  static const TextStyle bodySmall = TextStyle( // Added missing text style
+  static const TextStyle bodySmall = TextStyle(
     fontSize: 12,
     color: textSecondary,
   );
@@ -69,10 +79,10 @@ class AppConstants {
   // App Theme
   static ThemeData get lightTheme {
     return ThemeData(
-      primarySwatch: Colors.deepPurple,
+      primarySwatch: Colors.brown,
       primaryColor: primaryColor,
-      scaffoldBackgroundColor: backgroundColor,
-      appBarTheme: const AppBarTheme(
+      scaffoldBackgroundColor: neutralColor,
+      appBarTheme: AppBarTheme(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -80,7 +90,7 @@ class AppConstants {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
+          backgroundColor: accentColor,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
@@ -88,7 +98,7 @@ class AppConstants {
           ),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: cardColor,
         elevation: 2,
         shape: RoundedRectangleBorder(

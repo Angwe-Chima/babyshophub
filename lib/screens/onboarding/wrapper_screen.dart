@@ -1,8 +1,10 @@
+// ======================= screens/wrapper_screen.dart =======================
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/auth_provider.dart' as auth;
 import '../../providers/user_provider.dart';
+import '../../providers/product_provider.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
 import '../../screens/onboarding/category_selection_screen.dart';
@@ -16,20 +18,7 @@ class WrapperScreen extends StatefulWidget {
 }
 
 class _WrapperScreenState extends State<WrapperScreen> {
-  bool _isInitialized = false;
   bool _isCheckingUser = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeApp();
-  }
-
-  Future<void> _initializeApp() async {
-    setState(() {
-      _isInitialized = true;
-    });
-  }
 
   Future<void> _checkUserStatus(User user, UserProvider userProvider, auth.AuthProvider authProvider) async {
     if (_isCheckingUser) return;
@@ -42,31 +31,29 @@ class _WrapperScreenState extends State<WrapperScreen> {
       final userExists = await userProvider.checkUserExists(user.uid);
 
       if (!userExists) {
-        // New user - create document without completing onboarding
+        // Create new user document
         await userProvider.createUser(
           uid: user.uid,
           email: user.email ?? '',
           name: user.displayName,
         );
       } else {
-        // Existing user - load their data
+        // Load existing user data
         await userProvider.loadUser(user.uid);
-      }
-
-      if (authProvider.isNewUser) {
-        authProvider.resetNewUserFlag();
       }
     } catch (e) {
       debugPrint('Error checking user status: $e');
     } finally {
-      setState(() {
-        _isCheckingUser = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isCheckingUser = false;
+        });
+      }
     }
   }
 
   Widget _getScreenForUserState(User? user, UserProvider userProvider, auth.AuthProvider authProvider) {
-    // Not authenticated
+    // Not authenticated - show login
     if (user == null) {
       return const LoginScreen();
     }
@@ -78,37 +65,42 @@ class _WrapperScreenState extends State<WrapperScreen> {
 
     final currentUser = userProvider.currentUser;
 
-    // User document doesn't exist - shouldn't happen but handle it
+    // User document doesn't exist (shouldn't happen but handle it)
     if (currentUser == null) {
       return const OnboardingScreen();
     }
 
-    // Check onboarding completion status
-    if (!currentUser.hasCompletedOnboarding) {
-      // Show onboarding if user hasn't seen it
+    // NEW USER FLOW: Show onboarding for new users who haven't completed it
+    if (authProvider.isNewUser && !currentUser.hasCompletedOnboarding) {
       return const OnboardingScreen();
     }
 
-    // Check if user has selected interests but not completed onboarding
+    // EXISTING USER FLOW: Check if user has completed everything
+    if (!currentUser.hasCompletedOnboarding) {
+      return const OnboardingScreen();
+    }
+
+    // User completed onboarding but hasn't selected interests
     if (currentUser.interests.isEmpty) {
       return const CategorySelectionScreen();
     }
 
-    // User is fully set up - go to home
+    // User is fully set up - initialize products and go to home
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final productProvider = Provider.of<ProductProvider>(context, listen: false);
+      productProvider.initialize(userInterests: currentUser.interests);
+    });
+
     return const HomeScreen();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isInitialized) {
-      return const LoadingScreen();
-    }
-
     return Consumer2<auth.AuthProvider, UserProvider>(
       builder: (context, authProvider, userProvider, child) {
         final user = authProvider.user;
 
-        // Check user status when user changes and we don't have user data
+        // Check user status when user logs in and we don't have user data
         if (user != null && userProvider.currentUser == null && !_isCheckingUser) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _checkUserStatus(user, userProvider, authProvider);
@@ -119,6 +111,7 @@ class _WrapperScreenState extends State<WrapperScreen> {
         if (user == null && userProvider.currentUser != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             userProvider.clearUser();
+            authProvider.resetNewUserFlag();
           });
         }
 

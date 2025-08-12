@@ -13,7 +13,6 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   final List<String> _selectedCategories = [];
   bool _isLoading = false;
 
-  // Map category keys to product categories
   final Map<String, String> _categoryMapping = {
     'diapers': 'Diapers & Wipes',
     'clothing': 'Baby Clothing',
@@ -28,66 +27,16 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   };
 
   final List<CategoryItem> _categories = [
-    CategoryItem(
-      name: 'Diapers & Wipes',
-      key: 'diapers',
-      icon: Icons.baby_changing_station,
-      color: Colors.blue,
-    ),
-    CategoryItem(
-      name: 'Baby Clothing',
-      key: 'clothing',
-      icon: Icons.child_care,
-      color: Colors.pink,
-    ),
-    CategoryItem(
-      name: 'Toys & Games',
-      key: 'toys',
-      icon: Icons.toys,
-      color: Colors.orange,
-    ),
-    CategoryItem(
-      name: 'Feeding',
-      key: 'feeding',
-      icon: Icons.restaurant,
-      color: Colors.green,
-    ),
-    CategoryItem(
-      name: 'Baby Care',
-      key: 'care',
-      icon: Icons.spa,
-      color: Colors.purple,
-    ),
-    CategoryItem(
-      name: 'Nursery',
-      key: 'nursery',
-      icon: Icons.bed,
-      color: Colors.teal,
-    ),
-    CategoryItem(
-      name: 'Safety',
-      key: 'safety',
-      icon: Icons.security,
-      color: Colors.red,
-    ),
-    CategoryItem(
-      name: 'Health',
-      key: 'health',
-      icon: Icons.health_and_safety,
-      color: Colors.cyan,
-    ),
-    CategoryItem(
-      name: 'Travel & Gear',
-      key: 'travel',
-      icon: Icons.luggage,
-      color: Colors.brown,
-    ),
-    CategoryItem(
-      name: 'Books',
-      key: 'books',
-      icon: Icons.menu_book,
-      color: Colors.indigo,
-    ),
+    CategoryItem(name: 'Diapers & Wipes', key: 'diapers', icon: Icons.baby_changing_station, color: Colors.blue),
+    CategoryItem(name: 'Baby Clothing', key: 'clothing', icon: Icons.child_care, color: Colors.pink),
+    CategoryItem(name: 'Toys & Games', key: 'toys', icon: Icons.toys, color: Colors.orange),
+    CategoryItem(name: 'Feeding', key: 'feeding', icon: Icons.restaurant, color: Colors.green),
+    CategoryItem(name: 'Baby Care', key: 'care', icon: Icons.spa, color: Colors.purple),
+    CategoryItem(name: 'Nursery', key: 'nursery', icon: Icons.bed, color: Colors.teal),
+    CategoryItem(name: 'Safety', key: 'safety', icon: Icons.security, color: Colors.red),
+    CategoryItem(name: 'Health', key: 'health', icon: Icons.health_and_safety, color: Colors.cyan),
+    CategoryItem(name: 'Travel & Gear', key: 'travel', icon: Icons.luggage, color: Colors.brown),
+    CategoryItem(name: 'Books', key: 'books', icon: Icons.menu_book, color: Colors.indigo),
   ];
 
   void _toggleCategory(String categoryKey) {
@@ -117,21 +66,11 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
 
     try {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-
-      // Convert category keys to product category names for filtering
-      final productCategories = _selectedCategories
-          .map((key) => _categoryMapping[key] ?? key)
-          .toList();
+      final productCategories =
+      _selectedCategories.map((key) => _categoryMapping[key] ?? key).toList();
 
       await userProvider.updateUserInterests(productCategories);
-
-      if (mounted) {
-        // Navigate to product list screen to show personalized products
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/products',
-              (route) => false,
-        );
-      }
+      // You can navigate here if needed, or let a wrapper handle it
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -157,10 +96,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
       appBar: AppBar(
         title: const Text(
           'Choose Your Interests',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -232,25 +168,22 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       decoration: BoxDecoration(
-                        color: isSelected ? category.color.withOpacity(0.1) : Colors.white,
+                        color: isSelected
+                            ? category.color.withOpacity(0.1)
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isSelected ? category.color : Colors.grey[300]!,
+                          color:
+                          isSelected ? category.color : Colors.grey[300]!,
                           width: isSelected ? 2 : 1,
                         ),
-                        boxShadow: isSelected
-                            ? [
+                        boxShadow: [
                           BoxShadow(
-                            color: category.color.withOpacity(0.2),
-                            blurRadius: 8,
+                            color: isSelected
+                                ? category.color.withOpacity(0.2)
+                                : Colors.grey.withOpacity(0.1),
+                            blurRadius: isSelected ? 8 : 4,
                             offset: const Offset(0, 2),
-                          ),
-                        ]
-                            : [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
                           ),
                         ],
                       ),
@@ -290,8 +223,12 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                             category.name,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                              color: isSelected ? category.color : Colors.black87,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? category.color
+                                  : Colors.black87,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -326,7 +263,8 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor:
+                    AlwaysStoppedAnimation<Color>(Colors.white),
                     strokeWidth: 2,
                   ),
                 )
