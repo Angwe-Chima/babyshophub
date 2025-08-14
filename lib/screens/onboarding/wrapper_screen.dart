@@ -9,6 +9,7 @@ import '../../screens/auth/login_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
 import '../../screens/onboarding/category_selection_screen.dart';
 import '../../screens/home/home_screen.dart';
+import '../../widgets/loading_indicator.dart';
 
 class WrapperScreen extends StatefulWidget {
   const WrapperScreen({Key? key}) : super(key: key);
@@ -60,7 +61,9 @@ class _WrapperScreenState extends State<WrapperScreen> {
 
     // Still checking user status or loading
     if (_isCheckingUser || userProvider.isLoading) {
-      return const LoadingScreen();
+      return const LoadingIndicator(
+        message: 'Setting up your account...',
+      );
     }
 
     final currentUser = userProvider.currentUser;
@@ -117,49 +120,6 @@ class _WrapperScreenState extends State<WrapperScreen> {
 
         return _getScreenForUserState(user, userProvider, authProvider);
       },
-    );
-  }
-}
-
-class LoadingScreen extends StatelessWidget {
-  const LoadingScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.blue,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.baby_changing_station,
-                size: 60,
-                color: Colors.blue,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Loading...',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

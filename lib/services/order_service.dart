@@ -1,4 +1,4 @@
-// order_service.dart
+// order_service.dart - FIXED VERSION
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/order_model.dart';
 
@@ -24,12 +24,15 @@ class OrderService {
       final snapshot = await _firestore
           .collection(_collection)
           .where('userId', isEqualTo: userId)
-          .orderBy('createdAt', descending: true)
-          .get();
+          .get(); // Removed orderBy to avoid compound query
 
-      return snapshot.docs
+      var orders = snapshot.docs
           .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
           .toList();
+
+      // Sort in memory by createdAt descending
+      orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return orders;
     } catch (e) {
       throw Exception('Error fetching user orders: $e');
     }
@@ -87,33 +90,48 @@ class OrderService {
     return _firestore
         .collection(_collection)
         .where('status', isEqualTo: status.toString().split('.').last)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-        .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
-        .toList());
+        .map((snapshot) {
+      var orders = snapshot.docs
+          .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
+          .toList();
+
+      // Sort in memory by createdAt descending
+      orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return orders;
+    });
   }
 
-  // Get user orders in real-time
+  // FIXED: Get user orders in real-time - using simple query without compound index
   Stream<List<OrderModel>> getUserOrdersStream(String userId) {
     return _firestore
         .collection(_collection)
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-        .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
-        .toList());
+        .map((snapshot) {
+      var orders = snapshot.docs
+          .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
+          .toList();
+
+      // Sort in memory by createdAt descending
+      orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return orders;
+    });
   }
 
-  // Get all orders (admin function)
+  // Get all orders (admin function) - also fixed to avoid potential issues
   Stream<List<OrderModel>> getAllOrders() {
     return _firestore
         .collection(_collection)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-        .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
-        .toList());
+        .map((snapshot) {
+      var orders = snapshot.docs
+          .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
+          .toList();
+
+      // Sort in memory by createdAt descending
+      orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return orders;
+    });
   }
 }

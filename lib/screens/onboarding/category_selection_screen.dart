@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
+import '../../config/constants.dart';
 
 class CategorySelectionScreen extends StatefulWidget {
   const CategorySelectionScreen({Key? key}) : super(key: key);
@@ -27,16 +28,16 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   };
 
   final List<CategoryItem> _categories = [
-    CategoryItem(name: 'Diapers & Wipes', key: 'diapers', icon: Icons.baby_changing_station, color: Colors.blue),
-    CategoryItem(name: 'Baby Clothing', key: 'clothing', icon: Icons.child_care, color: Colors.pink),
-    CategoryItem(name: 'Toys & Games', key: 'toys', icon: Icons.toys, color: Colors.orange),
-    CategoryItem(name: 'Feeding', key: 'feeding', icon: Icons.restaurant, color: Colors.green),
-    CategoryItem(name: 'Baby Care', key: 'care', icon: Icons.spa, color: Colors.purple),
-    CategoryItem(name: 'Nursery', key: 'nursery', icon: Icons.bed, color: Colors.teal),
-    CategoryItem(name: 'Safety', key: 'safety', icon: Icons.security, color: Colors.red),
-    CategoryItem(name: 'Health', key: 'health', icon: Icons.health_and_safety, color: Colors.cyan),
-    CategoryItem(name: 'Travel & Gear', key: 'travel', icon: Icons.luggage, color: Colors.brown),
-    CategoryItem(name: 'Books', key: 'books', icon: Icons.menu_book, color: Colors.indigo),
+    CategoryItem(name: 'Diapers & Wipes', key: 'diapers', icon: Icons.baby_changing_station, color: AppConstants.primaryColor),
+    CategoryItem(name: 'Baby Clothing', key: 'clothing', icon: Icons.child_care, color: AppConstants.warmAccent),
+    CategoryItem(name: 'Toys & Games', key: 'toys', icon: Icons.toys, color: AppConstants.accentColor),
+    CategoryItem(name: 'Feeding', key: 'feeding', icon: Icons.restaurant, color: AppConstants.secondaryColor),
+    CategoryItem(name: 'Baby Care', key: 'care', icon: Icons.spa, color: AppConstants.highlightColor),
+    CategoryItem(name: 'Nursery', key: 'nursery', icon: Icons.bed, color: AppConstants.darkGreen),
+    CategoryItem(name: 'Safety', key: 'safety', icon: Icons.security, color: AppConstants.errorColor),
+    CategoryItem(name: 'Health', key: 'health', icon: Icons.health_and_safety, color: AppConstants.successColor),
+    CategoryItem(name: 'Travel & Gear', key: 'travel', icon: Icons.luggage, color: AppConstants.textSecondary),
+    CategoryItem(name: 'Books', key: 'books', icon: Icons.menu_book, color: AppConstants.primaryColor),
   ];
 
   void _toggleCategory(String categoryKey) {
@@ -52,9 +53,9 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   Future<void> _saveInterests() async {
     if (_selectedCategories.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one category'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: const Text('Please select at least one category'),
+          backgroundColor: AppConstants.accentColor,
         ),
       );
       return;
@@ -76,7 +77,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error saving preferences: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppConstants.errorColor,
           ),
         );
       }
@@ -92,53 +93,85 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppConstants.backgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Choose Your Interests',
-          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+          style: AppConstants.headingMedium.copyWith(
+            fontSize: 20,
+            color: AppConstants.textPrimary,
+          ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppConstants.cardColor,
         elevation: 0,
         automaticallyImplyLeading: false,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+            child: Image.network(
+              'https://res.cloudinary.com/dpcgk2sev/image/upload/v1755112706/Image_fx_the_one_19_cgyeu0.png',
+              width: 32,
+              height: 32,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: AppConstants.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                  ),
+                  child: Icon(
+                    Icons.baby_changing_station,
+                    color: AppConstants.primaryColor,
+                    size: 20,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
           // Header section
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            color: Colors.white,
+            padding: const EdgeInsets.all(AppConstants.paddingLarge),
+            color: AppConstants.cardColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'What are you shopping for?',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                  style: AppConstants.headingLarge.copyWith(
+                    fontSize: 26,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: AppConstants.spacingSmall),
                 Text(
                   'Select categories that interest you. We\'ll show you these products first.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
+                  style: AppConstants.bodyLarge.copyWith(
+                    color: AppConstants.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: AppConstants.spacingMedium),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppConstants.paddingMedium,
+                    vertical: AppConstants.paddingSmall,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    color: AppConstants.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+                    border: Border.all(
+                      color: AppConstants.primaryColor.withOpacity(0.3),
+                      width: 1,
+                    ),
                   ),
                   child: Text(
                     '${_selectedCategories.length} selected',
-                    style: const TextStyle(
-                      color: Colors.blue,
+                    style: AppConstants.bodyMedium.copyWith(
+                      color: AppConstants.primaryColor,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -150,12 +183,12 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
           // Categories grid
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppConstants.paddingMedium),
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
+                  crossAxisSpacing: AppConstants.spacingMedium,
+                  mainAxisSpacing: AppConstants.spacingMedium,
                   childAspectRatio: 1.1,
                 ),
                 itemCount: _categories.length,
@@ -170,18 +203,17 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? category.color.withOpacity(0.1)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                            : AppConstants.cardColor,
+                        borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
                         border: Border.all(
-                          color:
-                          isSelected ? category.color : Colors.grey[300]!,
+                          color: isSelected ? category.color : AppConstants.borderColor,
                           width: isSelected ? 2 : 1,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: isSelected
                                 ? category.color.withOpacity(0.2)
-                                : Colors.grey.withOpacity(0.1),
+                                : AppConstants.shadowColor,
                             blurRadius: isSelected ? 8 : 4,
                             offset: const Offset(0, 2),
                           ),
@@ -194,7 +226,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                             Container(
                               width: 24,
                               height: 24,
-                              margin: const EdgeInsets.only(bottom: 8),
+                              margin: EdgeInsets.only(bottom: AppConstants.spacingSmall),
                               decoration: BoxDecoration(
                                 color: category.color,
                                 shape: BoxShape.circle,
@@ -206,8 +238,8 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                               ),
                             ),
                           Container(
-                            width: 50,
-                            height: 50,
+                            width: 60,
+                            height: 60,
                             decoration: BoxDecoration(
                               color: category.color.withOpacity(0.2),
                               shape: BoxShape.circle,
@@ -215,22 +247,26 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                             child: Icon(
                               category.icon,
                               color: category.color,
-                              size: 24,
+                              size: 28,
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            category.name,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              color: isSelected
-                                  ? category.color
-                                  : Colors.black87,
+                          SizedBox(height: AppConstants.spacingMedium),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              category.name,
+                              style: AppConstants.bodyMedium.copyWith(
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? category.color
+                                    : AppConstants.textPrimary,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
@@ -243,28 +279,31 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
 
           // Continue button
           Container(
-            padding: const EdgeInsets.all(24),
-            color: Colors.white,
+            padding: const EdgeInsets.all(AppConstants.paddingLarge),
+            color: AppConstants.cardColor,
             child: SizedBox(
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _saveInterests,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: AppConstants.primaryColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
                   ),
                   elevation: 0,
+                  disabledBackgroundColor: AppConstants.borderColor,
+                  shadowColor: AppConstants.primaryColor.withOpacity(0.3),
+                ).copyWith(
+                  elevation: MaterialStateProperty.all(_isLoading ? 0 : 4),
                 ),
                 child: _isLoading
                     ? const SizedBox(
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
-                    valueColor:
-                    AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     strokeWidth: 2,
                   ),
                 )

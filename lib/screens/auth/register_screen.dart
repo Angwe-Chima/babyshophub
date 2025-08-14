@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../config/constants.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -70,10 +71,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // First, create the Firebase Auth user
       await Provider.of<AuthProvider>(context, listen: false).signup(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
+
+      // Get the current user from AuthProvider
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final user = authProvider.user;
+
+      if (user != null) {
+        // Create user profile in Firestore with all the registration data
+        await Provider.of<UserProvider>(context, listen: false)
+            .createUserWithRegistrationData(
+          uid: user.uid,
+          email: _emailController.text.trim(),
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+          dateOfBirth: _dobController.text.trim().isNotEmpty ? _dobController.text.trim() : null,
+          gender: _selectedGender,
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
