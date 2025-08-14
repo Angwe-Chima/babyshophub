@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
+import '../../config/constants.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
@@ -20,25 +21,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       title: "Welcome to BabyShop",
       description: "Your one-stop destination for all baby essentials. From diapers to toys, we've got everything you need.",
       icon: Icons.baby_changing_station,
-      color: Colors.blue,
+      color: AppConstants.primaryColor,
     ),
     OnboardingData(
       title: "Quality Products",
       description: "We offer only the highest quality products from trusted brands to keep your little one safe and happy.",
       icon: Icons.verified,
-      color: Colors.green,
+      color: AppConstants.successColor,
     ),
     OnboardingData(
       title: "Fast Delivery",
       description: "Get your baby essentials delivered quickly to your doorstep. Because we know you can't wait!",
       icon: Icons.local_shipping,
-      color: Colors.orange,
+      color: AppConstants.accentColor,
     ),
     OnboardingData(
       title: "Personalized Experience",
       description: "Tell us your preferences and we'll show you the products that matter most to you!",
       icon: Icons.favorite,
-      color: Colors.purple,
+      color: AppConstants.warmAccent,
     ),
   ];
 
@@ -73,9 +74,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (userProvider.currentUser == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('User data not found. Please try logging in again.'),
-              backgroundColor: Colors.red,
+            SnackBar(
+              content: const Text('User data not found. Please try logging in again.'),
+              backgroundColor: AppConstants.errorColor,
             ),
           );
         }
@@ -90,7 +91,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error completing onboarding: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppConstants.errorColor,
           ),
         );
       }
@@ -106,23 +107,63 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppConstants.backgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            // Skip button
+            // Header with logo and skip button
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(AppConstants.paddingMedium),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  // Logo
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: AppConstants.cardColor,
+                      borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppConstants.shadowColor,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+                      child: Image.network(
+                        'https://res.cloudinary.com/dpcgk2sev/image/upload/v1755112706/Image_fx_the_one_19_cgyeu0.png',
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: AppConstants.primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+                            ),
+                            child: Icon(
+                              Icons.baby_changing_station,
+                              color: AppConstants.primaryColor,
+                              size: 30,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  // Skip button
                   TextButton(
                     onPressed: _isLoading ? null : _completeOnboarding,
                     child: Text(
                       'Skip',
                       style: TextStyle(
-                        color: _isLoading ? Colors.grey[400] : Colors.grey[600],
+                        color: _isLoading ? AppConstants.textLight : AppConstants.textSecondary,
                         fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -143,51 +184,53 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemBuilder: (context, index) {
                   final data = _onboardingData[index];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingExtraLarge),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // Icon container with animation
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
-                          width: 120,
-                          height: 120,
+                          width: 140,
+                          height: 140,
                           decoration: BoxDecoration(
                             color: data.color.withOpacity(0.1),
                             shape: BoxShape.circle,
+                            border: Border.all(
+                              color: data.color.withOpacity(0.3),
+                              width: 2,
+                            ),
                           ),
                           child: Icon(
                             data.icon,
-                            size: 60,
+                            size: 70,
                             color: data.color,
                           ),
                         ),
-                        const SizedBox(height: 48),
+                        SizedBox(height: AppConstants.spacingLarge * 2),
                         // Title with fade animation
                         AnimatedOpacity(
                           duration: const Duration(milliseconds: 500),
                           opacity: 1.0,
                           child: Text(
                             data.title,
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                            style: AppConstants.headingLarge.copyWith(
+                              fontSize: 32,
+                              color: AppConstants.textPrimary,
                             ),
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: AppConstants.spacingLarge),
                         // Description with fade animation
                         AnimatedOpacity(
                           duration: const Duration(milliseconds: 500),
                           opacity: 1.0,
                           child: Text(
                             data.description,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                              height: 1.5,
+                            style: AppConstants.bodyLarge.copyWith(
+                              color: AppConstants.textSecondary,
+                              height: 1.6,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -200,8 +243,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
 
             // Bottom section with indicators and button
-            Padding(
-              padding: const EdgeInsets.all(32.0),
+            Container(
+              color: AppConstants.cardColor,
+              padding: const EdgeInsets.all(AppConstants.paddingExtraLarge),
               child: Column(
                 children: [
                   // Page indicators
@@ -212,18 +256,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           (index) => AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _currentPage == index ? 24 : 8,
+                        width: _currentPage == index ? 32 : 8,
                         height: 8,
                         decoration: BoxDecoration(
                           color: _currentPage == index
-                              ? Colors.blue
-                              : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(4),
+                              ? AppConstants.primaryColor
+                              : AppConstants.borderColor,
+                          borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: AppConstants.spacingExtraLarge),
                   // Action button
                   SizedBox(
                     width: double.infinity,
@@ -231,13 +275,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _nextPage,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: AppConstants.primaryColor,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
                         ),
                         elevation: 0,
-                        disabledBackgroundColor: Colors.grey[300],
+                        disabledBackgroundColor: AppConstants.borderColor,
+                        shadowColor: AppConstants.primaryColor.withOpacity(0.3),
+                      ).copyWith(
+                        elevation: MaterialStateProperty.all(_isLoading ? 0 : 4),
                       ),
                       child: _isLoading
                           ? const SizedBox(

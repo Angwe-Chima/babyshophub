@@ -6,6 +6,7 @@ import '../../providers/user_provider.dart';
 import '../../config/constants.dart';
 import '../../services/user_service.dart';
 import 'support_screen.dart';
+import '../orders/order_history_screen.dart'; // Add this import
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -183,6 +184,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await authProvider.logout();
       userProvider.clearUser();
     }
+  }
+
+  // Navigate to Order History Screen
+  void _navigateToOrderHistory() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const OrderHistoryScreen(),
+      ),
+    );
+  }
+
+  // Navigate to other screens (placeholder implementations)
+  void _navigateToSavedAddresses() {
+    _showSnackBar('Saved Addresses feature coming soon!', isError: false);
+  }
+
+  void _navigateToPaymentMethods() {
+    _showSnackBar('Payment Methods feature coming soon!', isError: false);
   }
 
   Widget _buildProfileHeader() {
@@ -556,10 +576,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Account Actions Section
             _buildSectionTitle('Account Actions'),
 
-            // Action Items
-            _buildActionItem('Order History', Icons.history),
-            _buildActionItem('Saved Addresses', Icons.location_on),
-            _buildActionItem('Payment Methods', Icons.payment),
+            // Action Items - Updated with proper navigation
+            _buildActionItem('Order History', Icons.history, onTap: _navigateToOrderHistory),
+            _buildActionItem('Saved Addresses', Icons.location_on, onTap: _navigateToSavedAddresses),
+            _buildActionItem('Payment Methods', Icons.payment, onTap: _navigateToPaymentMethods),
             _buildActionItem(
               'Support & FAQs',
               Icons.help_outline,
