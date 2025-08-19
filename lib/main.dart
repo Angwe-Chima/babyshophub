@@ -9,6 +9,7 @@ import 'providers/product_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/user_provider.dart';
 import '/providers/review_provider.dart';
+import '/providers/admin_provider.dart';
 
 
 void main() async {
@@ -23,7 +24,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => ReviewProvider())
+        ChangeNotifierProvider(create: (_) => ReviewProvider()),
+        ChangeNotifierProvider(create: (_) => AdminProvider())
       ],
       child: const MyApp(),
     ),

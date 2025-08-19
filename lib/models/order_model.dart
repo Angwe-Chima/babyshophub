@@ -1,24 +1,18 @@
-// order_model.dart
-import 'package:flutter/material.dart';
-
-enum OrderStatus {
-  pending,
-  confirmed,
-  preparing,
-  onTheWay,
-  delivered,
-  cancelled
-}
-
+// models/order_model.dart - Updated and consistent version
 class OrderModel {
   final String id;
   final String userId;
+  final String userEmail;
+  final String userName;
   final List<OrderItem> items;
   final double total;
   final double subtotal;
   final double deliveryFee;
   final double tax;
+  final String shippingAddress;
   final OrderStatus status;
+  final PaymentStatus paymentStatus;
+  final String? trackingNumber;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final DeliveryInfo? deliveryInfo;
@@ -26,12 +20,17 @@ class OrderModel {
   OrderModel({
     required this.id,
     required this.userId,
+    required this.userEmail,
+    required this.userName,
     required this.items,
     required this.total,
     required this.subtotal,
     required this.deliveryFee,
     required this.tax,
+    required this.shippingAddress,
     required this.status,
+    required this.paymentStatus,
+    this.trackingNumber,
     required this.createdAt,
     this.updatedAt,
     this.deliveryInfo,
@@ -41,64 +40,72 @@ class OrderModel {
     return OrderModel(
       id: id,
       userId: map['userId'] ?? '',
-      items: List<OrderItem>.from(
-        (map['items'] ?? []).map((item) => OrderItem.fromMap(item)),
-      ),
+      userEmail: map['userEmail'] ?? '',
+      userName: map['userName'] ?? '',
+      items: (map['items'] as List<dynamic>?)
+          ?.map((item) => OrderItem.fromMap(item))
+          .toList() ??
+          [],
       total: (map['total'] ?? 0).toDouble(),
       subtotal: (map['subtotal'] ?? 0).toDouble(),
       deliveryFee: (map['deliveryFee'] ?? 0).toDouble(),
       tax: (map['tax'] ?? 0).toDouble(),
-      status: _statusFromString(map['status'] ?? 'pending'),
-      createdAt: DateTime.parse(map['createdAt']),
-      updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
-      deliveryInfo: map['deliveryInfo'] != null ? DeliveryInfo.fromMap(map['deliveryInfo']) : null,
+      shippingAddress: map['shippingAddress'] ?? '',
+      status: OrderStatus.values.firstWhere(
+            (status) => status.name == (map['status'] ?? 'pending'),
+        orElse: () => OrderStatus.pending,
+      ),
+      paymentStatus: PaymentStatus.values.firstWhere(
+            (status) => status.name == (map['paymentStatus'] ?? 'pending'),
+        orElse: () => PaymentStatus.pending,
+      ),
+      trackingNumber: map['trackingNumber'],
+      createdAt: map['createdAt'] is String
+          ? DateTime.parse(map['createdAt'])
+          : map['createdAt']?.toDate() ?? DateTime.now(),
+      updatedAt: map['updatedAt'] is String
+          ? DateTime.parse(map['updatedAt'])
+          : map['updatedAt']?.toDate(),
+      deliveryInfo: map['deliveryInfo'] != null
+          ? DeliveryInfo.fromMap(map['deliveryInfo'])
+          : null,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
-      'items': items.map((e) => e.toMap()).toList(),
+      'userEmail': userEmail,
+      'userName': userName,
+      'items': items.map((item) => item.toMap()).toList(),
       'total': total,
       'subtotal': subtotal,
       'deliveryFee': deliveryFee,
       'tax': tax,
-      'status': status.toString().split('.').last,
+      'shippingAddress': shippingAddress,
+      'status': status.name,
+      'paymentStatus': paymentStatus.name,
+      'trackingNumber': trackingNumber,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'deliveryInfo': deliveryInfo?.toMap(),
     };
   }
 
-  static OrderStatus _statusFromString(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return OrderStatus.pending;
-      case 'confirmed':
-        return OrderStatus.confirmed;
-      case 'preparing':
-        return OrderStatus.preparing;
-      case 'ontheway':
-      case 'on_the_way':
-        return OrderStatus.onTheWay;
-      case 'delivered':
-        return OrderStatus.delivered;
-      case 'cancelled':
-        return OrderStatus.cancelled;
-      default:
-        return OrderStatus.pending;
-    }
-  }
-
   OrderModel copyWith({
     String? id,
     String? userId,
+    String? userEmail,
+    String? userName,
     List<OrderItem>? items,
     double? total,
     double? subtotal,
     double? deliveryFee,
     double? tax,
+    String? shippingAddress,
     OrderStatus? status,
+    PaymentStatus? paymentStatus,
+    String? trackingNumber,
     DateTime? createdAt,
     DateTime? updatedAt,
     DeliveryInfo? deliveryInfo,
@@ -106,12 +113,17 @@ class OrderModel {
     return OrderModel(
       id: id ?? this.id,
       userId: userId ?? this.userId,
+      userEmail: userEmail ?? this.userEmail,
+      userName: userName ?? this.userName,
       items: items ?? this.items,
       total: total ?? this.total,
       subtotal: subtotal ?? this.subtotal,
       deliveryFee: deliveryFee ?? this.deliveryFee,
       tax: tax ?? this.tax,
+      shippingAddress: shippingAddress ?? this.shippingAddress,
       status: status ?? this.status,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      trackingNumber: trackingNumber ?? this.trackingNumber,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deliveryInfo: deliveryInfo ?? this.deliveryInfo,
@@ -153,6 +165,8 @@ class OrderItem {
       'quantity': quantity,
     };
   }
+
+  double get totalPrice => price * quantity;
 }
 
 class DeliveryInfo {
@@ -181,4 +195,20 @@ class DeliveryInfo {
       'instructions': instructions,
     };
   }
+}
+
+enum OrderStatus {
+  pending,
+  confirmed,
+  preparing,
+  onTheWay,
+  delivered,
+  cancelled,
+}
+
+enum PaymentStatus {
+  pending,
+  paid,
+  failed,
+  refunded,
 }

@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/admin_provider.dart'; // Add this import
 import '../../config/constants.dart';
 import '../../services/user_service.dart';
 import 'support_screen.dart';
-import '../orders/order_history_screen.dart'; // Add this import
+import '../orders/order_history_screen.dart';
+import '../admin/admin_dashboard_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -29,6 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadUserData();
+    _loadAdminStats();
   }
 
   void _loadUserData() {
@@ -42,6 +45,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _phoneController.text = user.phone ?? '';
       _dobController.text = user.dateOfBirth ?? '';
       _selectedGender = user.gender ?? 'Female';
+    }
+  }
+
+  void _loadAdminStats() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final user = userProvider.currentUser;
+
+    if (user?.isAdmin == true) {
+      // Load admin dashboard stats if user is admin
+      final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+      adminProvider.loadDashboardStats();
     }
   }
 
@@ -196,6 +210,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // Navigate to Admin Dashboard
+  void _navigateToAdminDashboard() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminDashboardScreen(),
+      ),
+    );
+  }
+
   // Navigate to other screens (placeholder implementations)
   void _navigateToSavedAddresses() {
     _showSnackBar('Saved Addresses feature coming soon!', isError: false);
@@ -209,6 +233,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.currentUser;
     final displayName = user != null ? '${user.firstName} ${user.lastName ?? ''}'.trim() : 'User Name';
+    final isAdmin = user?.isAdmin == true;
 
     return Container(
       width: double.infinity,
@@ -218,15 +243,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppConstants.primaryColor,
-            AppConstants.accentColor,
-          ],
+          colors: isAdmin
+              ? [Colors.red.shade600, Colors.red.shade800] // Admin colors
+              : [AppConstants.primaryColor, AppConstants.accentColor], // Regular user colors
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppConstants.primaryColor.withOpacity(0.3),
+            color: (isAdmin ? Colors.red : AppConstants.primaryColor).withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -234,39 +258,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          // Profile Picture
-          Container(
-            width: 90,
-            height: 90,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.2),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 3,
+          // Profile Picture with Admin Badge
+          Stack(
+            children: [
+              Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.2),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 3,
+                  ),
+                ),
+                child: Icon(
+                  isAdmin ? Icons.admin_panel_settings : Icons.person,
+                  size: 45,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            child: Icon(
-              Icons.person,
-              size: 45,
-              color: Colors.white,
-            ),
+              // Admin Badge
+              if (isAdmin)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.amber,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Icon(
+                      Icons.star,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+            ],
           ),
 
           const SizedBox(height: 16),
 
-          // Name
-          Text(
-            displayName,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-            textAlign: TextAlign.center,
+          // Name with Admin Label
+          Column(
+            children: [
+              Text(
+                displayName,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              // Admin Label
+              if (isAdmin)
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'ADMINISTRATOR',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red.shade800,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+            ],
           ),
 
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
 
           // Email
           Text(
@@ -280,34 +350,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           const SizedBox(height: 20),
 
-          // Edit Profile Button
-          ElevatedButton(
-            onPressed: _isLoading ? null : _saveProfile,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppConstants.primaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
+          // Buttons Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Edit Profile Button
+              ElevatedButton(
+                onPressed: _isLoading ? null : _saveProfile,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: isAdmin ? Colors.red.shade600 : AppConstants.primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  elevation: 0,
+                ),
+                child: _isLoading
+                    ? SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        isAdmin ? Colors.red.shade600 : AppConstants.primaryColor
+                    ),
+                  ),
+                )
+                    : Text(
+                  _isEditing ? 'Save Changes' : 'Edit Profile',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              elevation: 0,
-            ),
-            child: _isLoading
-                ? SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppConstants.primaryColor),
-              ),
-            )
-                : Text(
-              _isEditing ? 'Save Changes' : 'Edit Profile',
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-            ),
+
+              // Admin Dashboard Button (only for admins)
+              if (isAdmin) ...[
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: _navigateToAdminDashboard,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                    foregroundColor: Colors.red.shade800,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    elevation: 0,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.dashboard, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Dashboard',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
@@ -519,7 +628,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             color: AppConstants.textPrimary,
             fontWeight: FontWeight.w500,
@@ -538,22 +647,262 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildAdminQuickStats() {
+    return Consumer<AdminProvider>(
+      builder: (context, adminProvider, child) {
+        final stats = adminProvider.dashboardStats;
+        final isLoading = adminProvider.isLoadingUsers ||
+            adminProvider.isLoadingOrders ||
+            adminProvider.isLoadingSupportTickets;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.red.shade50, Colors.red.shade100],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.red.withOpacity(0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.analytics, color: Colors.red, size: 24),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Admin Quick Stats',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red.shade700,
+                    ),
+                  ),
+                  if (isLoading) ...[
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildQuickStatItem(
+                      'Users',
+                      stats['totalUsers']?.toString() ?? '---',
+                      Icons.people,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildQuickStatItem(
+                      'Orders',
+                      stats['monthlyOrders']?.toString() ?? '---',
+                      Icons.shopping_cart,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildQuickStatItem(
+                      'Products',
+                      stats['totalProducts']?.toString() ?? '---',
+                      Icons.inventory,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildQuickStatItem(
+                      'Tickets',
+                      stats['openTickets']?.toString() ?? '---',
+                      Icons.support_agent,
+                    ),
+                  ),
+                ],
+              ),
+
+              // Additional stats row
+              if (stats.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildQuickStatItem(
+                        'Revenue',
+                        stats['totalRevenue'] != null
+                            ? '\$${stats['totalRevenue'].toStringAsFixed(0)}'
+                            : '---',
+                        Icons.attach_money,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildQuickStatItem(
+                        'Low Stock',
+                        stats['lowStockProducts']?.toString() ?? '---',
+                        Icons.warning,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _navigateToAdminDashboard,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.dashboard, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Open Admin Dashboard',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Refresh button
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: isLoading ? null : () {
+                    adminProvider.loadDashboardStats();
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.refresh, size: 16, color: Colors.red),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Refresh Stats',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuickStatItem(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.red.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.red, size: 20),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.red.shade700,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.red.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.currentUser;
+    final isAdmin = user?.isAdmin == true;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text(
-          'Profile',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+        title: Row(
+          children: [
+            Text(
+              'Profile',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (isAdmin) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.amber,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  'ADMIN',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade800,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
-        backgroundColor: AppConstants.primaryColor,
+        backgroundColor: isAdmin ? Colors.red.shade600 : AppConstants.primaryColor,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -561,6 +910,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             // Profile Header
             _buildProfileHeader(),
+
+            // Admin Quick Stats (only for admins)
+            if (isAdmin) _buildAdminQuickStats(),
 
             // Personal Information Section
             _buildSectionTitle('Personal Information'),
@@ -576,7 +928,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Account Actions Section
             _buildSectionTitle('Account Actions'),
 
-            // Action Items - Updated with proper navigation
+            // Regular user actions only
             _buildActionItem('Order History', Icons.history, onTap: _navigateToOrderHistory),
             _buildActionItem('Saved Addresses', Icons.location_on, onTap: _navigateToSavedAddresses),
             _buildActionItem('Payment Methods', Icons.payment, onTap: _navigateToPaymentMethods),

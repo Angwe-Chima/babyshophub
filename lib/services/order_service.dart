@@ -1,4 +1,4 @@
-// order_service.dart - FIXED VERSION
+// order_service.dart - Updated and fixed version
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/order_model.dart';
 
@@ -24,7 +24,7 @@ class OrderService {
       final snapshot = await _firestore
           .collection(_collection)
           .where('userId', isEqualTo: userId)
-          .get(); // Removed orderBy to avoid compound query
+          .get();
 
       var orders = snapshot.docs
           .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
@@ -62,7 +62,7 @@ class OrderService {
           .collection(_collection)
           .doc(orderId)
           .update({
-        'status': status.toString().split('.').last,
+        'status': status.name,
         'updatedAt': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -77,7 +77,7 @@ class OrderService {
           .collection(_collection)
           .doc(orderId)
           .update({
-        'status': OrderStatus.cancelled.toString().split('.').last,
+        'status': OrderStatus.cancelled.name,
         'updatedAt': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -89,7 +89,7 @@ class OrderService {
   Stream<List<OrderModel>> getOrdersByStatus(OrderStatus status) {
     return _firestore
         .collection(_collection)
-        .where('status', isEqualTo: status.toString().split('.').last)
+        .where('status', isEqualTo: status.name)
         .snapshots()
         .map((snapshot) {
       var orders = snapshot.docs
@@ -102,7 +102,7 @@ class OrderService {
     });
   }
 
-  // FIXED: Get user orders in real-time - using simple query without compound index
+  // Get user orders in real-time
   Stream<List<OrderModel>> getUserOrdersStream(String userId) {
     return _firestore
         .collection(_collection)
@@ -119,7 +119,7 @@ class OrderService {
     });
   }
 
-  // Get all orders (admin function) - also fixed to avoid potential issues
+  // Get all orders (admin function)
   Stream<List<OrderModel>> getAllOrders() {
     return _firestore
         .collection(_collection)
